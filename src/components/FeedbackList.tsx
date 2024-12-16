@@ -1,22 +1,20 @@
-import { FeedbackItemType } from "../data/FeedbackData";
-import FeedbackItem from "./FeedbackItem";
+import { useContext } from 'react';
+import { FeedbackItemType } from '../data/FeedbackData';
+import FeedbackItem from './FeedbackItem';
+import FeedbackContext from '../context/FeedbackContext';
 
-interface FeedbackListProps {
-  feedback: FeedbackItemType[];
-  handleDelete: (id: number) => void;
-}
-const FeedbackList = ({ feedback, handleDelete }: FeedbackListProps) => {
+const FeedbackList = () => {
+  const { feedback } = useContext(FeedbackContext);
   if (!feedback || feedback.length === 0) {
     return <p>No Feedback</p>;
   }
   return (
-    <div className="feedbac-list">
+    <div className='feedbac-list'>
       {feedback.map((f: FeedbackItemType) => {
         return (
           <FeedbackItem
             key={f.id}
             feedbackItem={f}
-            handleDelete={handleDelete}
           />
         );
       })}
