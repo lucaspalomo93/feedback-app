@@ -5,7 +5,7 @@ import Card from './shared/Card';
 import FeedbackContext from '../context/FeedbackContext';
 
 const FeedbackForm = () => {
-  const { addFeedback, updateFeedbackItem, feedbackEdit } =
+  const { addFeedback, updateFeedbackItem, setFeedbackEdit, feedbackEdit } =
     useContext(FeedbackContext);
   const [text, setText] = useState<string>('');
   const [rating, setRating] = useState<number>(10);
@@ -36,6 +36,7 @@ const FeedbackForm = () => {
       };
       if (feedbackEdit.edit && feedbackEdit.item.id) {
         updateFeedbackItem(feedbackEdit.item.id, newFeedback);
+        setFeedbackEdit({ ...feedbackEdit, edit: false });
       } else {
         addFeedback(newFeedback);
       }

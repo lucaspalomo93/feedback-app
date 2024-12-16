@@ -1,6 +1,5 @@
-import { createContext, ReactNode, useState } from 'react';
+import { createContext, ReactNode, useEffect, useState } from 'react';
 import { FeedbackItemType } from '../data/FeedbackData';
-import { v4 as uuidv4 } from 'uuid';
 
 interface FeedbackEditInterface {
   item: FeedbackItemType;
@@ -10,15 +9,17 @@ interface FeedbackEditInterface {
 interface State {
   feedback: FeedbackItemType[];
   feedbackEdit: FeedbackEditInterface;
+  isLoading: boolean;
   setFeedback: (feedback: FeedbackItemType[]) => void;
   deleteFeedback: (id: string) => void;
   addFeedback: (feedbackItem: FeedbackItemType) => void;
   editFeedback: (item: FeedbackItemType) => void;
   updateFeedbackItem: (id: string, updItem: FeedbackItemType) => void;
+  setFeedbackEdit: React.Dispatch<React.SetStateAction<FeedbackEditInterface>>;
 }
 
 const initialState: State = {
-  feedback: [{ id: '1', rating: 10, text: 'Example review' }],
+  feedback: [],
   feedbackEdit: {
     item: {
       rating: 0,
@@ -26,11 +27,13 @@ const initialState: State = {
     },
     edit: false,
   },
+  isLoading: false,
   setFeedback: () => {},
   deleteFeedback: () => {},
   addFeedback: () => {},
   editFeedback: () => {},
   updateFeedbackItem: () => {},
+  setFeedbackEdit: () => initialState.feedbackEdit,
 };
 
 const FeedbackContext = createContext<State>(initialState);
@@ -40,6 +43,7 @@ interface FeedbackProviderProps {
 }
 
 export const FeedbackProvider = ({ children }: FeedbackProviderProps) => {
+  const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState(initialState.feedback);
   const [feedbackEdit, setFeedbackEdit] = useState({
     item: {
@@ -48,15 +52,38 @@ export const FeedbackProvider = ({ children }: FeedbackProviderProps) => {
     },
     edit: false,
   });
-  const deleteFeedback = (id: string) => {
+  useEffect(() => {
+    fetchFeedback();
+  }, []);
+
+  const fetchFeedback = async () => {
+    const response = await fetch(
+      `http://localhost:5000/feedback?_sort=id&_order=desc`
+    );
+    const data = await response.json();
+    setFeedback(data);
+    setIsLoading(false);
+  };
+  const deleteFeedback = async (id: string) => {
     if (window.confirm('Are you sure you want to delete?')) {
+      await fetch(`http://localhost:5000/feedback/${id}`, {
+        method: 'DELETE',
+      });
       setFeedback(feedback.filter((f) => f.id !== id));
     }
   };
-  const addFeedback = (feedbackItem: FeedbackItemType) => {
+  const addFeedback = async (feedbackItem: FeedbackItemType) => {
+    const response = await fetch('http://localhost:5000/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(feedbackItem),
+    });
+    console.log('response...', response);
+    const data = await response.json();
     setFeedbackEdit({ ...feedbackEdit, edit: false });
-    feedbackItem.id = uuidv4();
-    setFeedback([...feedback, feedbackItem]);
+    setFeedback([...feedback, data]);
   };
   const editFeedback = (item: FeedbackItemType) => {
     setFeedbackEdit({
@@ -64,9 +91,17 @@ export const FeedbackProvider = ({ children }: FeedbackProviderProps) => {
       edit: true,
     });
   };
-  const updateFeedbackItem = (id: string, updItem: FeedbackItemType) => {
+  const updateFeedbackItem = async (id: string, updItem: FeedbackItemType) => {
+    const response = await fetch(`http://localhost:5000/feedback/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updItem),
+    });
+    const data = await response.json();
     setFeedback(
-      feedback.map((item) => (item.id === id ? { ...item, ...updItem } : item))
+      feedback.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
   };
 
@@ -75,11 +110,13 @@ export const FeedbackProvider = ({ children }: FeedbackProviderProps) => {
       value={{
         feedback,
         feedbackEdit,
+        isLoading,
         setFeedback,
         deleteFeedback,
         addFeedback,
         editFeedback,
         updateFeedbackItem,
+        setFeedbackEdit,
       }}
     >
       {children}
