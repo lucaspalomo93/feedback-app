@@ -1,4 +1,4 @@
-# feedback-app-2024
+# Feedback App
 
 # React + TypeScript + Vite
 
