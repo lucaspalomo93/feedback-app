@@ -5,6 +5,7 @@
 This is an application to create, update and delete reviews.
 
 To test it locally
+- clone the repository
 - npm install
 - npm run dev
 
